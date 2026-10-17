@@ -350,6 +350,7 @@ footer { position: relative; z-index: 1; text-align: center; font-size: 11px; le
           <a class="btn btn-ghost" href="#placar">Placar</a>
           <a class="btn btn-primary" href="#resultado">Meu resultado</a>
         </div>
+        <p class="hint" style="margin-top:14px">Outra pessoa vai usar este celular? <button class="link" id="btn-forget" type="button">Liberar o aparelho</button></p>
       </div>
     </div>
     <div id="home-review" hidden>
@@ -912,6 +913,15 @@ $("#monogram").addEventListener("click", () => {
   else if (taps === 1) go("inicio");
 });
 const closeAdmin = () => { $("#m-admin").hidden = true; };
+// "Liberar o aparelho": esquece o resultado guardado neste celular (o palpite no placar continua, a não ser que os noivos o liberem)
+$("#btn-forget").addEventListener("click", e => {
+  const b = e.currentTarget;
+  if (b.textContent !== "Confirmar") { b.textContent = "Confirmar"; return; }
+  store.del("resultado"); store.del("jogo"); result = null; game = null; reviewLoaded = false; pickedName = null;
+  $("#r-review").hidden = true; $("#r-secret").hidden = false;
+  toast("Aparelho liberado. Outra pessoa já pode jogar.");
+  go("inicio");
+});
 $("#btn-admin-close").addEventListener("click", closeAdmin); $("#btn-admin-close2").addEventListener("click", closeAdmin);
 async function adminCall(fn, body) { return sbFetch("/rest/v1/rpc/" + fn, { method: "POST", body: JSON.stringify({ p_pin: $("#admin-pin").value, ...body }) }); }
 async function renderAdmin() {

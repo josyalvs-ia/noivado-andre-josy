@@ -113,3 +113,39 @@ grant execute on function anular_todos(text) to anon, authenticated;
 --   select * from ranking;                           -- placar
 --   select anular_todos('2104');                      -- zerar o placar
 --   select anular_palpite('2104', 'Nome');            -- liberar uma pessoa para jogar de novo
+
+-- Revelação (os noivos liberam pela área dos noivos; antes disso my_review devolve só {reveal:false})
+create table if not exists photo_info (letter text primary key, legenda text not null, quando text not null);
+alter table photo_info enable row level security;
+revoke all on table photo_info from anon, authenticated;
+-- insert into photo_info (letter, legenda, quando) values ('A', 'Legenda', '12/06/2024') on conflict (letter) do update set legenda = excluded.legenda, quando = excluded.quando;
+insert into app_settings (key, value) values ('reveal', 'false') on conflict (key) do nothing;
+
+create or replace function set_reveal(p_pin text, p_on boolean)
+returns boolean language plpgsql security definer set search_path = public as $$
+begin
+  if p_pin is null or p_pin <> (select value from app_settings where key = 'admin_pin') then raise exception 'PIN incorreto'; end if;
+  update app_settings set value = case when p_on then 'true' else 'false' end where key = 'reveal';
+  return p_on;
+end; $$;
+revoke all on function set_reveal(text, boolean) from public;
+grant execute on function set_reveal(text, boolean) to anon, authenticated;
+
+create or replace function my_review(p_name text)
+returns json language plpgsql security definer set search_path = public, extensions as $$
+declare
+  v_on boolean := coalesce((select value = 'true' from app_settings where key = 'reveal'), false);
+  v_key text := lower(unaccent(regexp_replace(trim(coalesce(p_name,'')), '\s+', ' ', 'g')));
+  v_guess text[]; v_correct text[]; v_items json;
+begin
+  if not v_on then return json_build_object('reveal', false); end if;
+  select letters into v_correct from secret_order where id = 1;
+  select guess into v_guess from guesses where name_key = v_key and not voided;
+  select json_agg(json_build_object('pos', i, 'letra', v_correct[i], 'legenda', p.legenda, 'quando', p.quando,
+           'minha', array_position(v_guess, v_correct[i]), 'acertou', v_guess is not null and v_guess[i] = v_correct[i]) order by i)
+    into v_items from generate_subscripts(v_correct, 1) i left join photo_info p on p.letter = v_correct[i];
+  return json_build_object('reveal', true, 'jogou', v_guess is not null, 'items', coalesce(v_items, '[]'::json));
+end; $$;
+revoke all on function my_review(text) from public;
+grant execute on function my_review(text) to anon, authenticated;
+--   select set_reveal('2104', true);   -- revelar / select set_reveal('2104', false); -- esconder

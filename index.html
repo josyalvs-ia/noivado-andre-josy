@@ -200,6 +200,28 @@ img { max-width: 100%; display: block; }
 .medal { display: inline-flex; align-items: center; gap: 8px; margin-top: 12px; padding: 7px 14px; border-radius: 999px; background: color-mix(in oklab, var(--gold) 22%, var(--card)); color: var(--gold-deep); font-size: 12px; letter-spacing: .15em; text-transform: uppercase; font-weight: 600; }
 .medal[hidden] { display: none; }
 
+/* Revisão do palpite (só depois que os noivos revelam) */
+.review { display: flex; flex-direction: column; gap: 8px; }
+.rev { display: grid; grid-template-columns: 30px 56px 1fr auto; align-items: center; gap: 10px; padding: 6px 10px; border-radius: 6px; border: 1px solid var(--border); background: var(--card); animation: flipin .55s var(--spring) both; transform-origin: top; }
+@keyframes flipin { from { opacity: 0; transform: perspective(600px) rotateX(-70deg); } }
+.rev .num { font-family: var(--font-display); font-size: 22px; color: var(--terracotta-deep); text-align: center; }
+.rev .thumb { width: 56px; height: 56px; border-radius: 4px; overflow: hidden; background: var(--sand); }
+.rev .thumb img { width: 100%; height: 100%; object-fit: cover; }
+.rev .meta { min-width: 0; font-size: 13px; color: var(--muted); }
+.rev .meta b { display: block; font-family: var(--font-display); font-size: 19px; color: var(--fg); font-weight: 500; line-height: 1.15; }
+.rev .meta .when { font-size: 11px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--olive-deep); }
+.pill { font-size: 11px; letter-spacing: 0.08em; text-transform: uppercase; padding: 5px 9px; border-radius: 999px; white-space: nowrap; }
+.pill.hit { background: color-mix(in oklab, var(--olive) 18%, transparent); color: var(--olive-deep); }
+.pill.miss { background: color-mix(in oklab, var(--terracotta) 16%, transparent); color: var(--terracotta-deep); }
+.rev.hit { border-color: color-mix(in oklab, var(--olive) 55%, transparent); background: color-mix(in oklab, var(--olive) 6%, var(--card)); }
+.rev.miss { border-color: color-mix(in oklab, var(--terracotta) 40%, transparent); }
+.review-head { text-align: center; }
+.review-head .eyebrow { margin-bottom: 6px; }
+.toggle-row { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 10px 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; text-align: left; }
+.toggle-row small { display: block; color: var(--muted); font-size: 12px; }
+.toggle-row button { border: 1px solid var(--terracotta); background: var(--terracotta-deep); color: #fff; border-radius: 999px; padding: 7px 12px; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; white-space: nowrap; }
+.toggle-row button.off { background: var(--card); color: var(--terracotta-deep); }
+
 /* Placar (sempre no fim da página) */
 .board { position: relative; z-index: 1; margin-top: 52px; padding: 26px 16px 22px; border-radius: 10px; background: linear-gradient(180deg, color-mix(in oklab, var(--sand) 85%, transparent), var(--card)); border: 1px solid color-mix(in oklab, var(--border) 80%, transparent); scroll-margin-top: 76px; }
 .board[hidden] { display: none; }
@@ -330,6 +352,10 @@ footer { position: relative; z-index: 1; text-align: center; font-size: 11px; le
         </div>
       </div>
     </div>
+    <div id="home-review" hidden>
+      <div class="review-head"><p class="eyebrow">Revelação</p><h3 style="font-size:28px">A ordem da nossa história</h3></div>
+      <div class="review" id="home-review-list" style="margin-top:14px"></div>
+    </div>
     <div class="card center" id="closed" hidden>
       <h3 style="font-size:28px">A dinâmica está fechada</h3>
       <p class="hint" id="closed-msg"></p>
@@ -367,7 +393,11 @@ footer { position: relative; z-index: 1; text-align: center; font-size: 11px; le
       <div class="medal" id="r-medal" hidden></div>
       <div class="sub" id="r-sub"></div>
     </div>
-    <p class="hint center">A ordem certa fica em segredo até os noivos revelarem no fim da festa. Assim ninguém cola do vizinho.</p>
+    <p class="hint center" id="r-secret">A ordem certa fica em segredo até os noivos revelarem no fim da festa. Assim ninguém cola do vizinho.</p>
+    <div id="r-review" hidden>
+      <div class="review-head"><p class="eyebrow">Revelação</p><h3 style="font-size:28px">Como foi o seu palpite</h3></div>
+      <div class="review" id="r-review-list" style="margin-top:14px"></div>
+    </div>
     <div class="btn-row">
       <a class="btn btn-primary btn-block" href="#placar">Ver o placar</a>
     </div>
@@ -421,6 +451,7 @@ footer { position: relative; z-index: 1; text-align: center; font-size: 11px; le
     </div>
     <div id="admin-open" hidden style="display:flex;flex-direction:column;gap:12px">
       <p class="hint" style="margin:0">Liberar um nome apaga o palpite dele do placar e deixa a pessoa jogar de novo.</p>
+      <div class="toggle-row"><span>Revelar a ordem certa<small id="reveal-state">Os convidados passam a ver o que acertaram e erraram, com as datas.</small></span><button id="btn-reveal" type="button">Revelar</button></div>
       <div class="admin-list" id="admin-list"></div>
       <p class="error" id="admin-msg" aria-live="polite"></p>
       <button class="btn btn-ghost btn-block" id="btn-admin-reset">Zerar o placar inteiro</button>
@@ -770,6 +801,33 @@ async function renderResult() {
   }
 }
 
+/* ---------- revelação (depois que os noivos liberam) ---------- */
+let revealOn = false, reviewLoaded = false;
+function reviewHTML(items, played) {
+  return items.map(it => {
+    const f = BY_LETTER[it.letra] || { letra: it.letra, src: "", thumb: "" };
+    const hit = !!it.acertou, mine = it.minha;
+    return `<div class="rev ${played ? (hit ? "hit" : "miss") : ""}" style="animation-delay:${it.pos * 0.06}s">
+      <div class="num">${it.pos}</div>
+      <div class="thumb">${thumbHTML(f)}</div>
+      <div class="meta"><b>${esc(it.legenda || "Foto " + it.letra)}</b><span class="when">Foto ${esc(it.letra)}${it.quando ? " · " + esc(it.quando) : ""}</span></div>
+      ${played ? `<span class="pill ${hit ? "hit" : "miss"}">${hit ? "acertou ✓" : mine ? "você pôs em " + mine + "º" : "fora"}</span>` : ""}
+    </div>`;
+  }).join("");
+}
+async function checkReveal() {
+  if (reviewLoaded) return;
+  try {
+    const r = await sbFetch("/rest/v1/rpc/my_review", { method: "POST", body: JSON.stringify({ p_name: result ? result.nome : (game ? game.nome : "") }) });
+    revealOn = !!(r && r.reveal);
+    if (!revealOn) return;
+    reviewLoaded = true;
+    if (result) { $("#r-secret").hidden = true; $("#r-review").hidden = false; $("#r-review-list").innerHTML = reviewHTML(r.items, r.jogou); }
+    $("#home-review").hidden = false; $("#home-review-list").innerHTML = reviewHTML(r.items, false);
+    if (current === "resultado" || current === "inicio") toast("Os noivos revelaram a ordem certa!");
+  } catch {}
+}
+
 /* ---------- placar ao vivo ---------- */
 let known = null, pollId = null, lastPodiumKey = "";
 function sortRows(rows) { return rows.slice().sort((a, b) => b.score - a.score || (a.duration_ms ?? 1e12) - (b.duration_ms ?? 1e12) || (a.created_at || "").localeCompare(b.created_at || "")); }
@@ -827,6 +885,7 @@ function drawBoard(rows) {
 async function loadBoard() {
   try { drawBoard(await fetchRanking()); $("#pl-hint").textContent = "Atualiza sozinho a cada poucos segundos."; }
   catch { $("#pl-hint").textContent = "Sem conexão com o placar agora. Tentando de novo…"; }
+  checkReveal();
 }
 function startPolling() { clearInterval(pollId); loadBoard(); pollId = setInterval(() => { if (!document.hidden) loadBoard(); }, 8000); }
 document.addEventListener("visibilitychange", () => { if (!document.hidden) loadBoard(); });
@@ -861,6 +920,7 @@ const closeAdmin = () => { $("#m-admin").hidden = true; };
 $("#btn-admin-close").addEventListener("click", closeAdmin); $("#btn-admin-close2").addEventListener("click", closeAdmin);
 async function adminCall(fn, body) { return sbFetch("/rest/v1/rpc/" + fn, { method: "POST", body: JSON.stringify({ p_pin: $("#admin-pin").value, ...body }) }); }
 async function renderAdmin() {
+  try { const st = await sbFetch("/rest/v1/rpc/my_review", { method: "POST", body: JSON.stringify({ p_name: "" }) }); setRevealUI(!!(st && st.reveal)); } catch {}
   const rows = sortRows(await fetchRanking());
   $("#admin-list").innerHTML = rows.length ? rows.map(r => `<div class="admin-row"><span>${esc(r.name)} <small>· ${r.score}/${r.total}</small></span><button data-free="${esc(r.name)}">Liberar</button></div>`).join("") : `<p class="hint">Nenhum palpite no placar.</p>`;
 }
@@ -877,6 +937,19 @@ $("#admin-list").addEventListener("click", async e => {
   b.disabled = true;
   try { const n = await adminCall("anular_palpite", { p_name: b.dataset.free }); $("#admin-msg").textContent = n ? `${b.dataset.free} liberado(a). Pode jogar de novo.` : "Nada para liberar."; await renderAdmin(); loadBoard(); }
   catch (err) { $("#admin-msg").textContent = friendlyError(err); b.disabled = false; }
+});
+function setRevealUI(on) {
+  const b = $("#btn-reveal"); b.textContent = on ? "Esconder de novo" : "Revelar"; b.classList.toggle("off", on);
+  $("#reveal-state").textContent = on ? "Revelado: todo mundo já vê a ordem certa e os acertos." : "Os convidados passam a ver o que acertaram e erraram, com as datas.";
+  b.dataset.on = on ? "1" : "";
+}
+$("#btn-reveal").addEventListener("click", async e => {
+  const b = e.currentTarget, turnOn = !b.dataset.on;
+  if (turnOn && b.textContent !== "Confirmar revelação") { b.textContent = "Confirmar revelação"; return; }
+  b.disabled = true;
+  try { const on = await adminCall("set_reveal", { p_on: turnOn }); setRevealUI(!!on); $("#admin-msg").textContent = on ? "Ordem revelada para todos." : "Ordem escondida de novo."; reviewLoaded = false; if (!on) { $("#r-review").hidden = true; $("#r-secret").hidden = false; $("#home-review").hidden = true; } checkReveal(); }
+  catch (err) { $("#admin-msg").textContent = friendlyError(err); setRevealUI(!!b.dataset.on); }
+  b.disabled = false;
 });
 $("#btn-admin-reset").addEventListener("click", async e => {
   const b = e.currentTarget;

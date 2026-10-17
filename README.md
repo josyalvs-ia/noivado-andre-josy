@@ -16,7 +16,7 @@ Cada foto no lugar certo vale 1 ponto. Um palpite por nome. Empate: menor tempo.
 
 ## Área dos noivos
 Toque 5 vezes no monograma A|J no topo e digite o PIN. Dá para liberar o palpite de um nome (a pessoa joga de novo)
-ou zerar o placar inteiro. O PIN fica na tabela `app_settings`.
+zerar o placar inteiro, ou **revelar a ordem certa**: a partir daí cada convidado vê na própria tela o que acertou e errou, com legenda e data, e quem não jogou vê a ordem na página inicial. O PIN fica na tabela `app_settings`.
 
 ## Trocar fotos ou convidados
 - Fotos: arquivos em `fotos/` (foto cheia) e `fotos/t/` (miniatura), com nomes aleatórios de propósito.

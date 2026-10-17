@@ -1,0 +1,30 @@
+name: Baixar assets de design
+on:
+  workflow_dispatch:
+    inputs:
+      urls:
+        description: "Lista 'nome=url' separada por espaço"
+        required: true
+permissions:
+  contents: write
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Baixar arquivos
+        run: |
+          mkdir -p design
+          for pair in ${{ github.event.inputs.urls }}; do
+            name="${pair%%=*}"; url="${pair#*=}"
+            echo "baixando $name <- $url"
+            curl -fsSL -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/130.0.0.0 Safari/537.36" -o "design/$name" "$url"
+            ls -la "design/$name"
+          done
+      - name: Commit
+        run: |
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add design
+          git commit -m "Assets de design para a arte do QR" || echo "nada a commitar"
+          git push

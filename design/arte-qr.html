@@ -1,0 +1,53 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<style>
+/* Arte para o WhatsApp: 1080 x 1350 (4:5). Mesmos tokens do josyeandre.com. */
+@font-face { font-family: "Cormorant Garamond"; src: url("cormorant-regular.woff2") format("woff2"); font-weight: 400 600; font-style: normal; }
+@font-face { font-family: "Cormorant Garamond"; src: url("cormorant-italic.woff2") format("woff2"); font-weight: 400; font-style: italic; }
+:root {
+  --terracotta: oklch(0.65 0.115 40);
+  --terracotta-deep: oklch(0.52 0.13 35);
+  --olive-deep: oklch(0.38 0.05 115);
+  --fg: oklch(0.25 0.02 60);
+  --muted: oklch(0.42 0.025 60);
+  --border: oklch(0.88 0.018 70);
+  --display: "Cormorant Garamond", Georgia, serif;
+  --sans: "Inter", system-ui, sans-serif;
+}
+* { box-sizing: border-box; margin: 0; }
+html, body { width: 1080px; height: 1350px; background: #fff; color: var(--fg); font-family: var(--sans); overflow: hidden; }
+.page { position: relative; width: 1080px; height: 1350px; padding: 84px 90px 60px; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.corner { position: absolute; left: -10px; top: -14px; width: 480px; height: auto; pointer-events: none; }
+.cluster { position: absolute; right: -40px; bottom: -30px; height: 640px; width: auto; transform: scaleX(-1); pointer-events: none; opacity: 0.95; }
+.logo { height: 74px; width: auto; }
+.eyebrow { margin-top: 44px; font-size: 20px; letter-spacing: 0.34em; text-transform: uppercase; color: var(--olive-deep); }
+h1 { margin-top: 18px; font-family: var(--display); font-weight: 400; font-size: 88px; line-height: 1.02; letter-spacing: -0.01em; color: var(--fg); }
+.divider { width: 72px; height: 2px; background: var(--terracotta); margin: 30px auto 0; }
+.lead { margin-top: 26px; font-size: 25px; line-height: 1.5; color: var(--muted); max-width: 700px; }
+.lead strong { color: var(--fg); font-weight: 500; }
+.qrcard { margin-top: 44px; padding: 26px; background: #fff; border: 1px solid var(--border); border-radius: 6px; box-shadow: 0 10px 40px -15px oklch(0.52 0.13 35 / 0.25); }
+.qrcard svg { width: 440px; height: 440px; display: block; }
+.cta { margin-top: 34px; font-size: 19px; letter-spacing: 0.26em; text-transform: uppercase; color: var(--terracotta-deep); font-weight: 500; }
+.link { margin-top: 10px; font-size: 18px; color: var(--muted); }
+.dateline { margin-top: auto; display: flex; align-items: center; justify-content: center; gap: 18px; font-size: 19px; letter-spacing: 0.32em; text-transform: uppercase; color: var(--muted); }
+.dateline::before, .dateline::after { content: ""; width: 60px; height: 1px; background: oklch(0.65 0.115 40 / 0.6); }
+.names { font-family: var(--display); font-size: 40px; letter-spacing: 0; text-transform: none; color: var(--fg); }
+.names .amp { color: var(--terracotta); font-style: italic; }
+</style>
+</head>
+<body>
+<div class="page">
+  <img class="corner" src="floral-corner.png" alt=""><img class="cluster" src="floral-cluster.png" alt="">
+  <img class="logo" src="logo-aj.png" alt="A|J">
+  <p class="eyebrow">Dinâmica do noivado</p>
+  <h1>E aí? Você conhece<br>a nossa história?</h1>
+  <div class="divider"></div>
+  <p class="lead">Você recebeu fotos nossas. Coloque-as na ordem em que aconteceram. <strong>Cada foto no lugar certo vale 1 ponto</strong> e quem acertar mais leva o prêmio.</p>
+  <div class="qrcard">__QR_SVG__</div>
+  <p class="cta">Aponte a câmera e dê o seu palpite</p>
+  <div class="dateline"><span class="names">André <span class="amp">&amp;</span> Josy</span></div>
+</div>
+</body>
+</html>

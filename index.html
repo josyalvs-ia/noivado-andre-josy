@@ -131,6 +131,10 @@ img { max-width: 100%; display: block; }
 
 /* Jogo */
 .player { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; font-size: 13px; color: var(--muted); }
+.dicas { border: 1px solid color-mix(in oklab, var(--gold) 70%, transparent); background: color-mix(in oklab, var(--gold) 14%, var(--card)); border-radius: 6px; padding: 16px 18px; box-shadow: var(--shadow-card); }
+.dicas .eyebrow { color: var(--gold-deep); margin-bottom: 8px; }
+.dicas ol { margin: 0; padding-left: 22px; display: grid; gap: 8px; font-size: 14px; line-height: 1.5; color: var(--fg); }
+.dicas li::marker { font-family: var(--font-display); font-weight: 600; color: var(--terracotta-deep); }
 .player b { font-family: var(--font-display); font-size: 24px; color: var(--fg); font-weight: 500; }
 .timer { font-variant-numeric: tabular-nums; display: inline-flex; align-items: center; gap: 6px; }
 .timer::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: var(--olive); animation: ping 1.8s infinite; }
@@ -366,6 +370,10 @@ footer { position: relative; z-index: 1; text-align: center; font-size: 11px; le
   <!-- JOGAR -->
   <section class="view" id="v-jogar" hidden>
     <div class="player"><span>Palpite de <b id="p-nome"></b></span><span class="timer" id="timer">0:00</span></div>
+    <div class="dicas" id="dicas" hidden>
+      <p class="eyebrow">Dicas dos noivos</p>
+      <ol id="dicas-list"></ol>
+    </div>
     <div>
       <p class="eyebrow">Suas fotos</p>
       <p class="hint" style="margin-bottom:12px">Toque numa foto para colocá-la na próxima posição. A letra é a mesma da foto impressa. A lupa amplia.</p>
@@ -474,6 +482,11 @@ const CONFIG = {
   aberto: true,
   mensagemFechado: "A dinâmica foi encerrada. Obrigada por jogar com a gente!",
   heroSrc: "fotos/8d357e.jpg",
+  // Dicas mostradas na tela do jogo. Deixe a lista vazia ([]) para esconder.
+  dicas: [
+    "Tudo começou com beijos: as duas primeiras fotos são o beijo no túnel colorido e o beijo na festa. Só falta descobrir qual veio antes.",
+    "As duas últimas fotos são de 2026: o pedido de casamento no ateliê das alianças e os noivinhos no carro. Qual foi primeiro?",
+  ],
   convidados: ["Adler", "Ana Luisa", "André", "Arquimedes", "Cassia", "Claudia", "Cristiane", "Emilio", "Felipe", "Gustavo", "Josianny", "Juliane", "Karol", "Luana", "Marcelo", "Marcos", "Nanci", "Siegfried", "Yasmin"],
   fotos: [
     { letra: "A", src: "fotos/7cdf5a.jpg", thumb: "fotos/t/7cdf5a.jpg" },
@@ -978,6 +991,10 @@ function renderQR() {
 }
 
 /* ---------- boot ---------- */
+if (Array.isArray(CONFIG.dicas) && CONFIG.dicas.length) {
+  $("#dicas-list").innerHTML = CONFIG.dicas.map(d => `<li>${esc(d)}</li>`).join("");
+  $("#dicas").hidden = false;
+}
 route();
 loadGuests();
 startPolling();

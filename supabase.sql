@@ -65,13 +65,15 @@ begin
   if found then
     v_existing := true;
   else
+    -- só nomes da tabela guests podem jogar
+    select name into v_listed_name from guests g where g.name_key = v_key;
+    v_listed := v_listed_name is not null;
+    if not v_listed then raise exception 'nome fora da lista'; end if;
+    v_name := v_listed_name;
     if (select array_agg(x order by x) from unnest(p_guess) x) is distinct from (select array_agg(x order by x) from unnest(v_correct) x)
     then raise exception 'palpite invalido'; end if;
     if (select count(*) from guesses where not voided) >= 400 then raise exception 'placar cheio'; end if;
     if p_duration_ms is null or p_duration_ms < 3000 then p_duration_ms := null; end if;
-    select exists(select 1 from guests g where g.name_key = v_key) into v_listed;
-    select name into v_listed_name from guests g where g.name_key = v_key;
-    if v_listed_name is not null then v_name := v_listed_name; end if;
     for i in 1..v_total loop if p_guess[i] = v_correct[i] then v_score := v_score + 1; end if; end loop;
     insert into guesses (name, name_key, guess, score, total, duration_ms, listed)
     values (v_name, v_key, p_guess, v_score, v_total, p_duration_ms, v_listed) returning * into v_row;
